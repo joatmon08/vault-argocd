@@ -1,0 +1,97 @@
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+kind: SecretProviderClass
+metadata:
+  name: expense-db-mysql
+spec:
+  provider: vault
+  secretObjects:
+    - secretName: expense-db-mysql
+      type: Opaque
+      data:
+        - objectName: expense-db-username
+          key: username
+        - objectName: expense-db-password
+          key: password
+  parameters:
+    roleName: 'expense'
+    vaultAddress: 'http://vault.vault:8200'
+    objects: |
+      - objectName: "expense-db-username"
+        secretPath: "expense/database/mysql/creds/expense"
+        secretKey: "username"
+      - objectName: "expense-db-password"
+        secretPath: "expense/database/mysql/creds/expense"
+        secretKey: "password"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expense
+data:
+  application.properties: |
+    spring.zipkin.enabled=false
+    spring.datasource.url=jdbc:mysql://expense-db-mysql.expenses:3306/DemoExpenses
+    server.port=5001
+    spring.datasource.username=${MYSQL_DB_USERNAME}
+    spring.datasource.password=${MYSQL_DB_PASSWORD}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expense
+  labels:
+    app: expense
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: expense
+  template:
+    metadata:
+      labels:
+        app: expense
+        framework: java
+    spec:
+      serviceAccountName: expense
+      containers:
+        - name: expense
+          image: "joatmon08/expense:java-v2"
+          ports:
+            - containerPort: 5001
+          env:
+            - name: MYSQL_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: expense-db-mysql
+                  key: username
+            - name: MYSQL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: expense-db-mysql
+                  key: password
+            - name: SPRING_CONFIG_LOCATION
+              value: "/tmp/config/application.properties"
+          volumeMounts:
+            - name: vault
+              mountPath: '/mnt/secrets-store'
+              readOnly: true
+            - name: config
+              mountPath: '/tmp/config/'
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /api
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: vault
+          csi:
+            driver: 'secrets-store.csi.k8s.io'
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: 'expense-db-mysql'
+        - name: config
+          configMap:
+            name: expense

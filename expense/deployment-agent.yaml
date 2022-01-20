@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expense
+  labels:
+    app: expense
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: expense
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "expense"
+        vault.hashicorp.com/agent-inject-secret-application.properties: "expense/database/mysql/creds/expense"
+        vault.hashicorp.com/secret-volume-path-application.properties: "/tmp/config"
+        vault.hashicorp.com/agent-inject-template-application.properties: |
+          spring.zipkin.enabled=false
+          spring.datasource.url=jdbc:mysql://expense-db-mysql.expenses:3306/DemoExpenses
+          server.port=5001
+          {{ with secret "expense/database/mysql/creds/expense" -}}
+          spring.datasource.username={{ .Data.username }}
+          spring.datasource.password={{ .Data.password }}
+          {{- end }}
+      labels:
+        app: expense
+        framework: java
+    spec:
+      serviceAccountName: expense
+      containers:
+        - name: expense
+          image: "joatmon08/expense:java-v2"
+          ports:
+            - containerPort: 5001
+          env:
+            - name: SPRING_CONFIG_LOCATION
+              value: "/tmp/config/application.properties"
+          livenessProbe:
+            httpGet:
+              path: /api
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
