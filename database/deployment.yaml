@@ -35,14 +35,6 @@ spec:
       app: expense-db-mysql
   template:
     metadata:
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/role: "expense-db-mysql"
-        vault.hashicorp.com/agent-inject-secret-db: "expense/static/data/mysql"
-        vault.hashicorp.com/agent-inject-template-db: |
-          {{ with secret "expense/static/data/mysql" -}}
-          export MYSQL_ROOT_PASSWORD="{{ .Data.data.db_login_password }}"
-          {{- end }}
       labels:
         app: expense-db-mysql
         framework: mysql
@@ -53,8 +45,12 @@ spec:
           image: "joatmon08/expense-db:mysql-8"
           ports:
             - containerPort: 3306
-          command: ["/bin/bash"]
-          args: ["-c", "source /vault/secrets/db && /usr/local/bin/docker-entrypoint.sh mysqld"]
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: expense-db-mysql
+                  key: password
           livenessProbe:
             tcpSocket:
               port: 3306

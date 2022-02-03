@@ -11,11 +11,30 @@ injector:
     tag: "1.9.0-ubi"
 
 server:
+  route:
+    enabled: true
+    host: vault-vault.apps-crc.testing
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Allow
+
   image:
     repository: "registry.connect.redhat.com/hashicorp/vault"
     tag: "1.9.0-ubi"
+
   ha:
     enabled: true
     replicas: 1
     raft:
       enabled: true
+      config: |
+        ui = true
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
+        storage "raft" {
+          path = "/vault/data"
+        }
+        service_registration "kubernetes" {}

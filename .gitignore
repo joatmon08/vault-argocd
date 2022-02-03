@@ -1,1 +1,4 @@
 unseal.json
+secrets.env
+crc-login
+argocd-login
