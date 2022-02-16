@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: expense-db-mysql
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   labels:
     app: expense-db-mysql
     framework: mysql
@@ -20,12 +22,16 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: expense-db-mysql
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 automountServiceAccountToken: true
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: expense-db-mysql
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   labels:
     app: expense-db-mysql
 spec:

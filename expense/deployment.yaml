@@ -5,6 +5,8 @@ metadata:
   name: expense
   labels:
     app: expense
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   replicas: 1
   selector:

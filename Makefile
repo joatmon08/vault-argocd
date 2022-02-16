@@ -53,7 +53,7 @@ vault-config-operator:
 	kubectl apply -f vault-config/install/namespace.yaml
 
 db-secrets:
-	argocd login --insecure --grpc-web $ARGO_URL  --username admin --password $ARGO_PASSWORD
+	argocd login --insecure --grpc-web ${ARGO_URL}  --username admin --password ${ARGO_PASSWORD}
 	kubectl apply -f argocd/project.yaml
 	kubectl apply -f argocd/secrets.yaml
 
@@ -72,10 +72,4 @@ expense-test:
 	curl 'http://localhost:15001/api/expense' -H 'Content-Type:application/json'
 
 clean:
-	kubectl delete --namespace=expenses -f argocd/
-	vault lease revoke -f -prefix expense/database/mysql/ || true
-	helm uninstall --namespace=vault vault || true
-	kubectl delete pvc data-vault-0 --ignore-not-found
-	helm uninstall --namespace=vault csi || true
-	oc delete project expenses || true
-	oc delete project vault || true
+	crc delete
