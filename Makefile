@@ -21,7 +21,7 @@ openshift-projects:
 	oc new-project expenses || true
 
 csi-deploy:
-	helm upgrade --install --namespace=vault --version=0.2.0 --values=helm/csi.openshift.yaml csi secrets-store-csi-driver/secrets-store-csi-driver
+	helm upgrade --install --namespace=vault --version=1.1.1 --values=helm/csi.openshift.yaml csi secrets-store-csi-driver/secrets-store-csi-driver
 	helm upgrade --install --namespace=vault --version=0.19.0 --values=helm/vault.openshift.yaml --values=helm/vault-csi.openshift.yaml vault hashicorp/vault
 	kubectl patch --namespace=vault daemonset vault-csi-provider --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/securityContext", "value": {"privileged": true} }]'
 
@@ -70,6 +70,9 @@ expense-port-forward:
 expense-test:
 	curl -X POST 'http://localhost:15001/api/expense' -H 'Content-Type:application/json' -d @data/expense.json
 	curl 'http://localhost:15001/api/expense' -H 'Content-Type:application/json'
+
+expense-csi:
+	kubectl apply -f expense/csi/ -n expenses
 
 clean:
 	crc delete

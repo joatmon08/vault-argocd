@@ -1,12 +1,12 @@
 ---
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
+apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
-  name: expense-db-mysql
+  name: expense-db-login
 spec:
   provider: vault
   secretObjects:
-    - secretName: expense-db-mysql
+    - secretName: expense-db-login
       type: Opaque
       data:
         - objectName: expense-db-username
@@ -63,12 +63,12 @@ spec:
             - name: MYSQL_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: expense-db-mysql
+                  name: expense-db-login
                   key: username
             - name: MYSQL_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: expense-db-mysql
+                  name: expense-db-login
                   key: password
             - name: SPRING_CONFIG_LOCATION
               value: "/tmp/config/application.properties"
@@ -91,7 +91,7 @@ spec:
             driver: 'secrets-store.csi.k8s.io'
             readOnly: true
             volumeAttributes:
-              secretProviderClass: 'expense-db-mysql'
+              secretProviderClass: 'expense-db-login'
         - name: config
           configMap:
             name: expense

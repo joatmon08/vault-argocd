@@ -1,0 +1,47 @@
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: vault-csi-provider
+allowPrivilegedContainer: false
+allowHostDirVolumePlugin: true
+allowHostNetwork: true
+allowHostPorts: true
+allowHostIPC: false
+allowHostPID: false
+readOnlyRootFilesystem: false
+defaultAddCapabilities:
+- SYS_ADMIN
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+fsGroup:
+  type: RunAsAny
+users:
+- system:serviceaccount:expenses:expense
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: expense
+  labels:
+    app: expense
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  selector:
+    app: expense
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5001
+      targetPort: 5001
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: expense
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+automountServiceAccountToken: true
