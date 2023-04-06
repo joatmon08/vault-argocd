@@ -20,24 +20,10 @@ metadata:
   name: expense
 automountServiceAccountToken: true
 ---
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
+apiVersion: v1
+kind: Secret
 metadata:
-  name: vault-csi-provider
-allowPrivilegedContainer: false
-allowHostDirVolumePlugin: true
-allowHostNetwork: true
-allowHostPorts: true
-allowHostIPC: false
-allowHostPID: false
-readOnlyRootFilesystem: false
-defaultAddCapabilities:
-- SYS_ADMIN
-runAsUser:
-  type: RunAsAny
-seLinuxContext:
-  type: RunAsAny
-fsGroup:
-  type: RunAsAny
-users:
-- system:serviceaccount:expenses:expense
+  name: expense-token
+  annotations:
+    kubernetes.io/service-account.name: expense
+type: kubernetes.io/service-account-token

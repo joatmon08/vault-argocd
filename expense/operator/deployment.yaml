@@ -1,29 +1,4 @@
 ---
-apiVersion: secrets-store.csi.x-k8s.io/v1alpha1
-kind: SecretProviderClass
-metadata:
-  name: expense-db-mysql
-spec:
-  provider: vault
-  secretObjects:
-    - secretName: expense-db-mysql
-      type: Opaque
-      data:
-        - objectName: expense-db-username
-          key: username
-        - objectName: expense-db-password
-          key: password
-  parameters:
-    roleName: 'expense'
-    vaultAddress: 'http://vault.vault:8200'
-    objects: |
-      - objectName: "expense-db-username"
-        secretPath: "expense/database/mysql/creds/expense"
-        secretKey: "username"
-      - objectName: "expense-db-password"
-        secretPath: "expense/database/mysql/creds/expense"
-        secretKey: "password"
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -73,9 +48,6 @@ spec:
             - name: SPRING_CONFIG_LOCATION
               value: "/tmp/config/application.properties"
           volumeMounts:
-            - name: vault
-              mountPath: '/mnt/secrets-store'
-              readOnly: true
             - name: config
               mountPath: '/tmp/config/'
               readOnly: true
@@ -86,12 +58,6 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
       volumes:
-        - name: vault
-          csi:
-            driver: 'secrets-store.csi.k8s.io'
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: 'expense-db-mysql'
         - name: config
           configMap:
             name: expense

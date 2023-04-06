@@ -22,6 +22,14 @@ metadata:
   name: expense-db-mysql
 automountServiceAccountToken: true
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: expense-db-mysql-token
+  annotations:
+    kubernetes.io/service-account.name: expense-db-mysql
+type: kubernetes.io/service-account-token
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

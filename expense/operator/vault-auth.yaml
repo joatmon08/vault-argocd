@@ -1,0 +1,11 @@
+apiVersion: secrets.hashicorp.com/v1alpha1
+kind: VaultAuth
+metadata:
+  name: vault-auth-expense
+spec:
+  vaultConnectionRef: vault-connection
+  method: kubernetes
+  mount: kubernetes
+  kubernetes:
+    role: expense
+    serviceAccount: expense
